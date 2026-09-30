@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Um push novo no mesmo branch cancela a execução anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Mesma imagem do docker-compose.yml e do README.
+  TERRAFORM_IMAGE: hashicorp/terraform:1.13
+
+jobs:
+  terraform:
+    # Nome exigido pela proteção da main: mudar aqui exige atualizar a regra no GitHub.
+    name: terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Formatação
+        run: docker run --rm -v "$PWD:/workspace" -w /workspace "$TERRAFORM_IMAGE" fmt -check -recursive -diff
+
+      # Sem backend e sem credenciais: valida sintaxe, tipos e referências entre módulos.
+      # -lockfile=readonly falha se o .terraform.lock.hcl versionado estiver desatualizado.
+      - name: Validação dos ambientes
+        run: |
+          for env in local dev; do
+            echo "::group::envs/$env"
+            docker run --rm -v "$PWD:/workspace" -w "/workspace/envs/$env" --entrypoint sh "$TERRAFORM_IMAGE" \
+              -c "terraform init -backend=false -input=false -lockfile=readonly && terraform validate"
+            echo "::endgroup::"
+          done

@@ -88,6 +88,10 @@ Pendente para quando a conta existir:
 - Bootstrap do bucket de state.
 - Módulos `network`, `ecr`, `ecs` e o host do Airflow (EC2 ou MWAA).
 
+## CI
+
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo PR e em todo push para a `main`, com `terraform fmt -check` e `terraform validate` em `envs/local` e `envs/dev`, sem backend e sem credenciais. Rode `docker compose run --rm --no-deps terraform fmt -recursive /workspace` antes de abrir o PR. A `main` é protegida: só recebe mudanças por PR, e o check `terraform` precisa passar antes do merge.
+
 ## Estrutura
 
 ```
