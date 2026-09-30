@@ -10,9 +10,9 @@ locals {
     AWS_DEFAULT_REGION    = var.aws_region
     AWS_ENDPOINT_URL      = var.localstack_endpoint
 
-    BRONZE_BUCKET = module.storage.bucket_names["bronze"]
-    SILVER_BUCKET = module.storage.bucket_names["silver"]
-    GOLD_BUCKET   = module.storage.bucket_names["gold"]
+    BRONZE_BUCKET = module.platform.bucket_names["bronze"]
+    SILVER_BUCKET = module.platform.bucket_names["silver"]
+    GOLD_BUCKET   = module.platform.bucket_names["gold"]
 
     # Serviço trino do docker-compose.yml, visto de dentro da rede bigdata.
     TRINO_HOST = "trino"

@@ -28,6 +28,19 @@ Somente o Docker Desktop. O Terraform roda em container, sem instalação local.
 
 ## Subir o ambiente local
 
+O `scripts/platform.sh` opera os quatro repositórios de uma vez:
+
+```bash
+scripts/platform.sh up       # plataforma + terraform apply + imagens (com o commit) + Airflow
+scripts/platform.sh build    # reconstrói as imagens de ingestão e dbt depois de mudar código
+scripts/platform.sh status   # containers, contrato, imagens desatualizadas e erros de DAG
+scripts/platform.sh reset    # apaga os dados locais e recria a plataforma vazia (pede confirmação)
+```
+
+O [RUNBOOK.md](RUNBOOK.md) explica a operação, o reprocessamento de datas e o que fazer em cada problema conhecido.
+
+Para subir só a plataforma, à mão:
+
 ```bash
 # 1. Sobe LocalStack, Hive Metastore e Trino
 docker compose up -d
@@ -105,15 +118,18 @@ O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo P
 
 ```
 docker-compose.yml     plataforma local
-local/                 configs do Trino e do Hive Metastore (imagem com driver Postgres)
+local/                 configs do Trino e do Hive Metastore (imagem com driver Postgres, com checksum)
+scripts/platform.sh    operação do ambiente local (up, build, status, reset)
+RUNBOOK.md             operação e problemas conhecidos
 modules/
+  platform/            base comum aos ambientes: buckets das camadas, roles e segredos
   storage/             buckets S3 (criptografia, bloqueio público, expiração)
   iam/                 roles ingestion, dbt e glue-crawler com privilégio mínimo
   secrets/             Secrets Manager (admin do Airflow)
   glue/                databases bronze/silver/gold e crawler da bronze (somente AWS)
   athena/              workgroup com limite de bytes por query (somente AWS)
-envs/
-  local/               LocalStack; platform.tf gera platform/local.env
-  dev/                 AWS
+envs/                  cada ambiente chama modules/platform e acrescenta o que é só dele
+  local/               LocalStack: bucket do metastore; platform.tf gera platform/local.env
+  dev/                 AWS: Glue e Athena
 platform/              contrato da plataforma para os outros repositórios (local.env é gerado)
 ```

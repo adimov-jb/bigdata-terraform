@@ -1,0 +1,27 @@
+# Atualizações mensais, agrupadas num PR por ecossistema. A CI valida cada PR.
+# Os providers seguem as restrições de versions.tf; o Dependabot atualiza os lock files.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /local/hive
+    schedule:
+      interval: monthly
+    groups:
+      docker:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directories: ["/envs/local", "/envs/dev"]
+    schedule:
+      interval: monthly
+    groups:
+      terraform:
+        patterns: ["*"]
