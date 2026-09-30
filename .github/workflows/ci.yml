@@ -19,7 +19,6 @@ env:
 
 jobs:
   terraform:
-    # Nome exigido pela proteção da main: mudar aqui exige atualizar a regra no GitHub.
     name: terraform
     runs-on: ubuntu-latest
     timeout-minutes: 15
