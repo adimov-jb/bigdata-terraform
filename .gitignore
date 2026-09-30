@@ -17,3 +17,5 @@ secrets.tfvars
 
 # Contrato da plataforma, gerado pelo terraform apply (envs/local/platform.tf)
 platform/local.env
+# Chaves de API locais, criadas à mão a partir de platform/secrets.env.example
+platform/secrets.env

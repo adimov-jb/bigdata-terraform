@@ -67,6 +67,10 @@ O `apply` gera `platform/local.env` (código em `envs/local/platform.tf`) com o 
 - Os outros repositórios procuram a pasta em `../Terraform/platform`. Se o clone estiver em outro caminho, defina `BIGDATA_PLATFORM_DIR`.
 - Para mudar um bucket ou endpoint, altere o Terraform e rode o `apply`. Depois, recrie os containers do Airflow (`docker compose up -d` em `airflow-dags`).
 
+### Chaves de API (`platform/secrets.env`)
+
+As chaves de API das fontes ficam em `platform/secrets.env`. Esse arquivo não é versionado: crie-o copiando `platform/secrets.env.example` e preencha as chaves. A ingestão e o Airflow o leem da mesma pasta do contrato. Hoje só existe `REST_COUNTRIES_API_KEY`.
+
 ### Consultar
 
 ```bash
