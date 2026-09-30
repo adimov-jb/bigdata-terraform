@@ -14,7 +14,7 @@ Há dois ambientes:
 | AWS | Local (docker-compose.yml) |
 |---|---|
 | S3, IAM, Secrets Manager | LocalStack (`localhost:4566`) |
-| Glue Data Catalog | Hive Metastore (`hive-metastore:9083`) |
+| Glue Data Catalog | Hive Metastore (`hive-metastore:9083`), com banco Postgres (`hive-metastore-db`) |
 | Athena | Trino (`localhost:8081`) |
 
 O Athena é baseado em Trino e o Glue é compatível com Hive Metastore, então o SQL e os modelos dbt ficam praticamente iguais nos dois ambientes.
@@ -62,7 +62,9 @@ O compose cria a rede Docker `bigdata`. Os repositórios de ingestão, dbt e Air
 
 ### Limitação: LocalStack sem persistência
 
-A versão gratuita do LocalStack guarda os dados em memória, então **reiniciar o container apaga os buckets**. O metastore, ao contrário, fica em volume e sobrevive. Para voltar a um estado consistente:
+A versão gratuita do LocalStack guarda os dados em memória, então **reiniciar o container apaga os buckets**. O metastore, ao contrário, fica no volume do Postgres e sobrevive.
+
+O metastore usa Postgres, e não o Derby embutido, porque o Derby não suporta o commit atômico que as tabelas Iceberg fazem no Hive 4. Para voltar a um estado consistente:
 
 ```bash
 docker compose down -v
@@ -90,7 +92,7 @@ Pendente para quando a conta existir:
 
 ```
 docker-compose.yml     plataforma local
-local/                 configs do Trino e do Hive Metastore
+local/                 configs do Trino e do Hive Metastore (imagem com driver Postgres)
 modules/
   storage/             buckets S3 (criptografia, bloqueio público, expiração)
   iam/                 roles ingestion, dbt e glue-crawler com privilégio mínimo

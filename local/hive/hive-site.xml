@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Hive Metastore local: faz o papel do AWS Glue Data Catalog. -->
 <configuration>
-    <!-- Derby embutido, gravado no volume docker (ver docker-compose.yml) -->
+    <!-- Banco do metastore: serviço hive-metastore-db (Postgres) do docker-compose.yml -->
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+    </property>
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:derby:;databaseName=/opt/hive/data/warehouse/metastore_db;create=true</value>
+        <value>jdbc:postgresql://hive-metastore-db:5432/metastore</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>hive</value>
     </property>
     <property>
         <name>metastore.warehouse.dir</name>

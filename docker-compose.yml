@@ -1,6 +1,6 @@
 # Plataforma local: emula na máquina os serviços que o Terraform cria na AWS.
 #   localstack -> S3, IAM, STS, Secrets Manager
-#   hive-metastore -> substitui o Glue Data Catalog
+#   hive-metastore -> substitui o Glue Data Catalog (banco em hive-metastore-db, Postgres)
 #   trino      -> substitui o Athena (o Athena também é baseado em Trino)
 #   terraform  -> CLI em container (docker compose run --rm terraform <comando>)
 name: bigdata
@@ -20,15 +20,31 @@ services:
       timeout: 3s
       retries: 20
 
+  # Banco do metastore. Derby não serve: não suporta o commit atômico que o Iceberg usa.
+  hive-metastore-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+    volumes:
+      - hive-metastore-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   hive-metastore:
-    image: apache/hive:4.0.1
+    build: ./local/hive
+    image: bigdata-hive-metastore:4.0.1
     environment:
       SERVICE_NAME: metastore
+      DB_DRIVER: postgres
       # Coloca o conector S3A (hadoop-aws) no classpath do metastore.
       HADOOP_CLASSPATH: /opt/hadoop/share/hadoop/tools/lib/*
     volumes:
       - ./local/hive/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
-      - hive-metastore-db:/opt/hive/data/warehouse
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/9083'"]
       interval: 5s
@@ -36,6 +52,8 @@ services:
       retries: 30
     depends_on:
       localstack:
+        condition: service_healthy
+      hive-metastore-db:
         condition: service_healthy
 
   trino:
