@@ -44,6 +44,15 @@ Recursos criados:
 - Buckets: `bigdata-local-{bronze,silver,gold,athena-results,airflow-dags,metastore}`
 - Roles: `bigdata-local-{ingestion,dbt,glue-crawler}`
 - Segredo: `bigdata/local/airflow/admin`
+- Arquivo `platform/local.env`, com o contrato da plataforma (veja abaixo)
+
+### Contrato da plataforma (`platform/local.env`)
+
+O `apply` gera `platform/local.env` (código em `envs/local/platform.tf`) com o que os outros repositórios precisam saber da plataforma: buckets, endpoint e credenciais do LocalStack, e o endereço do Trino. Os composes da ingestão e do dbt carregam esse arquivo, e o Airflow repassa as variáveis dele aos containers das tasks. Nenhum desses repositórios repete esses valores.
+
+- O arquivo não é versionado. Se ele não existir, rode o `apply` de novo.
+- Os outros repositórios procuram a pasta em `../Terraform/platform`. Se o clone estiver em outro caminho, defina `BIGDATA_PLATFORM_DIR`.
+- Para mudar um bucket ou endpoint, altere o Terraform e rode o `apply`. Depois, recrie os containers do Airflow (`docker compose up -d` em `airflow-dags`).
 
 ### Consultar
 
@@ -104,6 +113,7 @@ modules/
   glue/                databases bronze/silver/gold e crawler da bronze (somente AWS)
   athena/              workgroup com limite de bytes por query (somente AWS)
 envs/
-  local/               LocalStack
+  local/               LocalStack; platform.tf gera platform/local.env
   dev/                 AWS
+platform/              contrato da plataforma para os outros repositórios (local.env é gerado)
 ```
