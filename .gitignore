@@ -1,0 +1,16 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+
+# Variáveis com segredos (terraform.tfvars versionado não deve conter segredos)
+*.auto.tfvars
+secrets.tfvars
+
+# SO / IDE
+.DS_Store
+.idea/
+.vscode/

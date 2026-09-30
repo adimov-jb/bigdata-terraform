@@ -1,0 +1,68 @@
+# Plataforma local: emula na máquina os serviços que o Terraform cria na AWS.
+#   localstack -> S3, IAM, STS, Secrets Manager
+#   hive-metastore -> substitui o Glue Data Catalog
+#   trino      -> substitui o Athena (o Athena também é baseado em Trino)
+#   terraform  -> CLI em container (docker compose run --rm terraform <comando>)
+name: bigdata
+
+services:
+  localstack:
+    # Versão fixada: imagens mais novas exigem auth token do LocalStack.
+    image: localstack/localstack:4.4.0
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: s3,iam,sts,secretsmanager
+      AWS_DEFAULT_REGION: us-east-1
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  hive-metastore:
+    image: apache/hive:4.0.1
+    environment:
+      SERVICE_NAME: metastore
+      # Coloca o conector S3A (hadoop-aws) no classpath do metastore.
+      HADOOP_CLASSPATH: /opt/hadoop/share/hadoop/tools/lib/*
+    volumes:
+      - ./local/hive/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - hive-metastore-db:/opt/hive/data/warehouse
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/9083'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+  trino:
+    image: trinodb/trino:476
+    ports:
+      - "8081:8080" # 8080 fica livre para a UI do Airflow
+    volumes:
+      - ./local/trino/catalog:/etc/trino/catalog:ro
+    depends_on:
+      hive-metastore:
+        condition: service_healthy
+
+  terraform:
+    image: hashicorp/terraform:1.13
+    profiles: ["tools"]
+    working_dir: /workspace/envs/local
+    volumes:
+      - .:/workspace
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+volumes:
+  hive-metastore-db:
+
+# Rede com nome fixo: os composes dos outros repositórios (ingestão, dbt, airflow)
+# entram nela como rede externa para enxergar localstack e trino.
+networks:
+  default:
+    name: bigdata

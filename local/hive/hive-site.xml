@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hive Metastore local: faz o papel do AWS Glue Data Catalog. -->
+<configuration>
+    <!-- Derby embutido, gravado no volume docker (ver docker-compose.yml) -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:derby:;databaseName=/opt/hive/data/warehouse/metastore_db;create=true</value>
+    </property>
+    <property>
+        <name>metastore.warehouse.dir</name>
+        <value>s3a://bigdata-local-metastore/warehouse</value>
+    </property>
+    <property>
+        <name>metastore.metastore.event.db.notification.api.auth</name>
+        <value>false</value>
+    </property>
+
+    <!-- Acesso ao S3 do LocalStack. O Trino envia locations como s3://, então s3 também usa S3A. -->
+    <property>
+        <name>fs.s3.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+    </property>
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://localstack:4566</value>
+    </property>
+    <property>
+        <name>fs.s3a.endpoint.region</name>
+        <value>us-east-1</value>
+    </property>
+    <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>fs.s3a.connection.ssl.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>test</value>
+    </property>
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>test</value>
+    </property>
+</configuration>
