@@ -1,13 +1,13 @@
 output "bucket_names" {
-  value = module.storage.bucket_names
+  value = module.platform.bucket_names
 }
 
 output "role_arns" {
-  value = module.iam.role_arns
+  value = module.platform.role_arns
 }
 
 output "airflow_admin_secret_name" {
-  value = module.secrets.airflow_admin_secret_name
+  value = module.platform.airflow_admin_secret_name
 }
 
 output "platform_env_file" {
