@@ -1,6 +1,30 @@
-# Terraform — infraestrutura do projeto Big Data
+# bigdata-terraform — infraestrutura e operação da plataforma
 
-Infraestrutura como código do pipeline: ingestão Python → S3 (Parquet/Iceberg) → dbt → Glue Catalog → Athena, orquestrado pelo Airflow.
+Base da plataforma de dados. Este repositório:
+
+- provisiona a infraestrutura com Terraform: na AWS (S3 em camadas, IAM, Secrets Manager, Glue e Athena) e localmente (LocalStack, Hive Metastore e Trino em Docker);
+- gera o **contrato da plataforma** (`platform/local.env`), que os outros repositórios leem em vez de repetir buckets e endereços, e guarda o arquivo local de chaves de API (`platform/secrets.env`);
+- opera os quatro repositórios juntos com `scripts/platform.sh` e documenta a operação e os problemas conhecidos no [RUNBOOK.md](RUNBOOK.md).
+
+## A plataforma
+
+Este repositório é uma das quatro partes da plataforma de dados **bigdata**. Ela coleta dados públicos de APIs, organiza tudo num data lake em camadas (bronze → silver → gold) e entrega tabelas analíticas validadas. Tudo roda localmente em Docker, com LocalStack, Hive Metastore e Trino no lugar de S3, Glue e Athena, e está preparado para a AWS.
+
+| Repositório | Papel |
+|---|---|
+| **bigdata-terraform** (este) | Infraestrutura (AWS e local), contrato da plataforma, operação (`scripts/platform.sh`) e runbook |
+| [bigdata-ingestion-python](https://github.com/adimov-jb/bigdata-ingestion-python) | Ingestão das APIs para a camada bronze (Parquet no S3) |
+| [bigdata-dbt-modeling](https://github.com/adimov-jb/bigdata-dbt-modeling) | Camadas silver e gold (Iceberg), relacionamento entre fontes e validação de qualidade |
+| [bigdata-airflow-dags](https://github.com/adimov-jb/bigdata-airflow-dags) | Orquestração diária, alertas por e-mail e monitoramento de freshness |
+
+| Domínio | Fontes | Principais tabelas na gold |
+|---|---|---|
+| Clima | [Open-Meteo](https://open-meteo.com/): tempo horário de 10 capitais brasileiras | `fct_weather_daily`, `dim_city` |
+| Países | [Rest Countries v5](https://restcountries.com/) e [Banco Mundial](https://data.worldbank.org/): atributos dos países e indicadores socioeconômicos (PIB, inflação, expectativa de vida, pobreza, população) | `dim_country`, `fct_country_indicators_yearly`, `dq_indicator_coverage` |
+
+Para subir e operar tudo junto, use o `scripts/platform.sh up` do repositório `bigdata-terraform`. Os problemas conhecidos estão no [RUNBOOK](https://github.com/adimov-jb/bigdata-terraform/blob/main/RUNBOOK.md).
+
+## Ambientes
 
 Há dois ambientes:
 
