@@ -1,5 +1,5 @@
 # Hive Metastore com o driver JDBC do Postgres, que a imagem oficial não inclui.
-FROM apache/hive:4.0.1
+FROM apache/hive:4.2.1
 
 # O checksum faz o build falhar se o arquivo baixado não for exatamente o esperado.
 # Para trocar a versão, confira o .sha1 publicado no Maven Central e recalcule o sha256.
